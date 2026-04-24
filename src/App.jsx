@@ -22,7 +22,7 @@ function RoutesWrapper({ children }) {
   return (
     <div className="h-full bg-cover ">
       <Header></Header>
-      <div className="h-full px-12 mt-4">{children}</div>
+      <div className="h-full md:px-12 px-4 mt-4">{children}</div>
     </div>
   );
 }

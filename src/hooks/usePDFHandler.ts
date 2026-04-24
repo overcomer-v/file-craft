@@ -37,7 +37,7 @@ export function usePDFHandler() {
           if (!record?.file) continue;
 
           // Convert Blob → ArrayBuffer → embed
-          
+
           let arrayBuffer = await (record.file as Blob).arrayBuffer();
 
           let image;
@@ -89,12 +89,17 @@ export function usePDFHandler() {
         });
         const url = URL.createObjectURL(blob);
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName?.trim() ? `${fileName.trim()}.pdf` : "output.pdf";
-        a.click();
+        return {
+          url,
+          downloadName: fileName?.trim() ? `${fileName.trim()}.pdf` : "output.pdf",
+        };
 
-        URL.revokeObjectURL(url);
+        // const a = document.createElement("a");
+        // a.href = url;
+        // a.download = fileName?.trim() ? `${fileName.trim()}.pdf` : "output.pdf";
+        // a.click();
+
+        // URL.revokeObjectURL(url);
       } catch (error) {
         console.error("PDF creation failed:", error);
         alert("Failed to create PDF. Check console for details.");

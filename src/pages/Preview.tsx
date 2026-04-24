@@ -6,6 +6,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  TouchSensor,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -52,7 +53,7 @@ function SortableImage({
 
   return (
     <div
-      className="relative overflow-hidden w-56 h-56 border-2 border-white-600 rounded-xl"
+      className="relative overflow-hidden md:w-56 md:h-56 w-[45%] aspect-auto border-2 border-white-600 rounded-xl"
       ref={setNodeRef}
       style={style}
       {...attributes}
@@ -94,7 +95,19 @@ export function PreviewPage() {
   // Keep a ref to current object URLs so we can revoke them on unmount / refresh
   const objectURLsRef = useRef<string[]>([]);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // mouse: require 8px movement before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // hold for 250ms before drag activates
+        tolerance: 5, // allow 5px finger movement during the hold
+      },
+    }),
+  );
 
   // Fetch all records once; slice client-side for pagination
   useEffect(() => {
@@ -188,19 +201,23 @@ export function PreviewPage() {
     <main className="min-h-screen flex flex-col items-center w-full">
       <section className="w-full mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-medium">Images Preview</h2>
+          <h2 className="md:text-3xl text-xl font-medium">Images Preview</h2>
           <div className="w-12 h-[7px] rounded-2xl bg-red-600 mt-2"></div>
         </div>
         <button
-          onClick={() => createPDF(fileName, fitToImage)}
-          className="py-3 px-6 bg-red-600 rounded-full my-6 mt-auto font-medium flex items-center gap-2"
+          onClick={async () => {
+            const { url, downloadName } =
+              (await createPDF(fileName, fitToImage)) || {};
+            navigate("/download-page", { state: { url, downloadName } });
+          }}
+          className="md:py-3 md:px-6 py-2 px-4 bg-red-600 rounded-full my-6 mt-auto font-medium flex items-center gap-2"
         >
           <span>Convert</span>
           {isConverting && <i className="fa fa-spinner animate-spin"></i>}
         </button>
       </section>
 
-      <section className="self-start mb-10 flex text-white gap-16">
+      <section className="self-start mb-10 flex flex-col md:flex-row md:justify-between text-white md:gap-16 gap-4 w-full">
         <div className="flex flex-col">
           <input
             placeholder="Filename"
@@ -211,7 +228,7 @@ export function PreviewPage() {
             onChange={(e) => setFileName(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:justify-normal justify-between w-full md:w-fit">
           <p className="font-medium mr-4">Match page size to image size</p>
           <Switch checked={fitToImage} onChange={setFitToImage} />
         </div>
