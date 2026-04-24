@@ -49,6 +49,7 @@ function SortableImage({
     transition,
     opacity: isDragging ? 0.4 : 1,
     cursor: isDragging ? "grabbing" : "grab",
+    touchAction: "none",
   };
 
   return (
