@@ -91,7 +91,7 @@ export function usePDFHandler() {
 
         return {
           url,
-          downloadName: fileName?.trim() ? `${fileName.trim()}.pdf` : "output.pdf",
+          downloadName: fileName?.trim() ? `${fileName.trim()}.pdf` : `${Date.now()}-output.pdf`,
         };
 
         // const a = document.createElement("a");
