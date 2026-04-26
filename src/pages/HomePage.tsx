@@ -1,68 +1,71 @@
-import { useRef, useState } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFileHandler } from "../hooks/useFileHandler.js";
-import { useDBHandler } from "../hooks/useDBHandler.js";
+import { PDF_MODE } from "../types/operation-types.js";
 
 export function HomePage() {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState<File[]>([]);
   const navigate = useNavigate();
-  const { uploadFiles } = useDBHandler();
-  async function handleUpload() {
-    try {
-      await uploadFiles(files);
-      navigate("/upload-preview");
-    } catch (error) {
-      alert(error);
-    }
-  }
-
   return (
-    <div className="flex min-h-screen flex-col items-center ">
-      <div className=" md:mt-16 mt-24 flex flex-col items-center ">
-        {" "}
-        <div className=" flex-col flex md:gap-3 gap-1 text-center">
-          <p className="md:text-8xl text-5xl">
-            Create <span className="text-red-600 font-semibold">PDFs</span>
-          </p>
-          <p className="md:text-6xl text-2xl md:mt-3 font-thin">
-            Fast. Simple. Secure
-          </p>
-        </div>
-        <input
-          type="file"
-          multiple
-          ref={inputRef}
-          className="hidden"
-          onChange={(e) => {
-            console.log("e:", e);
-            setFiles([...(e.target.files ?? [])]);
-          }}
-        />
-        <div className="flex flex-col justify-center items-center text-center md:h-[9.0rem] h-[8.0rem] md:px-16 px-10 relative border-dashed border-[2px] rounded-xl md:mt-16 mt-10 border-neutral-700">
-          {files.length > 0 && (
-            <div className="text-sm absolute md:top-4 top-3 font-semibold w-full">
-              <p>{`${files.length} files selected`}</p>
-            </div>
-          )}
-          <button
-            onClick={async () => {
-              if (files.length > 0) {
-                console.log("clicked");
-                handleUpload();
-              } else {
-                inputRef.current?.click();
-              }
-            }}
-            className="md:py-4 md:px-8 py-3 px-6 text-black font-semibold bg-neutral-50  rounded-lg "
-          >
-            <span className="text-sm font-semibold">
-              {files.length > 0 ? "Upload files" : "Select Files"}
-            </span>{" "}
-            <i className="fa fa-cloud-upload text-red-600"></i>
-          </button>
-        </div>
+    <div className="flex flex-col h-full items-center w-full">
+      <div className=" flex-col flex md:gap-3 gap-1 text-center w-full mt-24">
+        <p className="md:text-8xl text-5xl">
+          Create <span className="text-red-600 font-semibold">PDFs</span>
+        </p>
+        <p className="md:text-6xl text-2xl md:mt-3 font-thin">
+          Fast. Simple. Secure
+        </p>
       </div>
+
+      <section className="mt-24 grid md:grid-cols-3 gap-12 ">
+        <ServiceCard
+        onClick={()=>{
+          navigate(`/upload/${PDF_MODE.IMAGE_TO_PDF}`);
+        }}
+          title="Image to PDF"
+          messageText="Convert images into a single PDF with reordering options"
+        />
+
+        <ServiceCard
+         onClick={()=>{
+          navigate(`/upload/${PDF_MODE.SPLIT}`);
+        }}
+          title="Split PDF"
+          messageText="Split a PDF into multiple files or extract specific pages"
+        />
+
+        <ServiceCard
+         onClick={()=>{
+          navigate(`/upload/${PDF_MODE.MERGE}`);
+        }}
+          title="Merge PDF"
+          messageText="Combine multiple PDFs into one and arrange pages easily"
+        />
+      </section>
     </div>
   );
 }
+
+type ServiceCardProps = ComponentPropsWithoutRef<"div"> & {
+  title: string;
+  iconlabel?: string;
+  messageText: string;
+};
+
+function ServiceCard({
+  title,
+  iconlabel = "fa-file-pdf",
+  messageText,
+  className = "",
+  ...rest
+}: ServiceCardProps) {
+  return (
+    <div
+      className={`flex flex-col gap-1 justify-center items-center border-2 cursor-pointer hover:bg-neutral-800 border-neutral-600 rounded-2xl w-[250px] h-[250px] px-8 ${className}`}
+      {...rest}
+    >
+      <i className={`fa ${iconlabel} text-4xl text-red-600`}></i>
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <p className="text-center opacity-50">{messageText}</p>
+    </div>
+  );
+}
+

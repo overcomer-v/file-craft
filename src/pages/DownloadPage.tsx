@@ -7,12 +7,19 @@ export function DownloadPage() {
   const fileName = location.state?.downloadName as string | undefined;
 
   useEffect(() => {
+    if (!pdfUrl) return;
+
+    const a = document.createElement("a");
+    a.href = pdfUrl;
+    a.download = fileName ?? "output.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
     return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-      }
+      URL.revokeObjectURL(pdfUrl);
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, fileName]);
 
   if (!pdfUrl) {
     return (
@@ -23,9 +30,9 @@ export function DownloadPage() {
   }
 
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-screen grid place-items-center">
       <a
-        className="absolute left-1/3 md:left-1/2 top-1/3 bg-white rounded-md px-5 py-2 text-black drop-shadow-md"
+        className="bg-white rounded-md px-5 py-2 text-black drop-shadow-md"
         href={pdfUrl}
         download={fileName ?? "output.pdf"}
       >
