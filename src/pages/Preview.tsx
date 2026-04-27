@@ -5,10 +5,12 @@ import { useDBHandler } from "../hooks/useDBHandler.js";
 import { useEffect, useState } from "react";
 import { getSessionId, hasSessionId } from "../helpers/session.js";
 import { PdfMergePreviewPage } from "../components/PDFMergePreveiw.js";
+import { PdfSplitPreview } from "../components/PDFsplitPreview.js";
+import type { UploadedFile } from "../types/itemTypes.js";
 
 export function PreviewPage() {
   const { fetchFiles } = useDBHandler();
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const navigate = useNavigate();
 
   const { mode } = useParams<{ mode: PdfMode }>();
@@ -45,5 +47,7 @@ export function PreviewPage() {
       return <ImageToPdfPreviewPage files={files} />;
     case PDF_MODE.MERGE:
       return <PdfMergePreviewPage files={files} />;
+    case PDF_MODE.SPLIT:
+      return <PdfSplitPreview file={files[0]?.file}/>
   }
 }

@@ -6,9 +6,10 @@ import { usePDFHandler } from "../hooks/usePDFHandler.js";
 import { db } from "../dexie.js";
 import { getSessionId } from "../helpers/session.js";
 import { useNavigate } from "react-router-dom";
+import type { UploadedFile } from "../types/itemTypes.js";
 
 interface PdfMergeArrangePageProps {
-  files: File[];
+  files: UploadedFile[];
 }
 
 export function PdfMergePreviewPage({ files }: PdfMergeArrangePageProps) {

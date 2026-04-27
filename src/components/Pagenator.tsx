@@ -1,11 +1,11 @@
-export function Pagination({
+export function Paginator({
   total,
   limit = 15,
   currentPage,
   onPageChange,
 }: {
   total: number;
-  limit: number;
+  limit?: number;
   currentPage: number;
   onPageChange: (page: number) => void;
 }) {

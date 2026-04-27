@@ -1,5 +1,4 @@
-// components/ReorderWorkspace.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -7,6 +6,7 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import type { ReorderItem } from "../types/reorder.js";
 import { SortablePreviewCard } from "./SortableCard.js";
+import { Paginator } from "./Pagenator.js";
 
 interface ReorderWorkspaceProps {
   items: ReorderItem[];
@@ -48,17 +49,24 @@ export function ReorderWorkspace({
 
   const totalPages = Math.max(1, Math.ceil(orderedItems.length / pageSize));
 
+  useEffect(() => {
+    if (pageNo > totalPages) {
+      setPageNo(totalPages);
+    }
+  }, [pageNo, totalPages]);
+
   const pageItems = useMemo(() => {
     const start = (pageNo - 1) * pageSize;
     return orderedItems.slice(start, start + pageSize);
   }, [orderedItems, pageNo, pageSize]);
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const oldIndex = orderedItems.findIndex((item) => item.id === active.id);
     const newIndex = orderedItems.findIndex((item) => item.id === over.id);
+
     if (oldIndex < 0 || newIndex < 0) return;
 
     const next = arrayMove(orderedItems, oldIndex, newIndex).map(
@@ -73,7 +81,7 @@ export function ReorderWorkspace({
   }
 
   return (
-    <main className=" w-full">
+    <main className="w-full">
       <section className="mb-12 flex flex-wrap gap-4">
         {orderedItems.length === 0 ? (
           <p className="my-[15vh] text-neutral-400">No files found.</p>
@@ -99,27 +107,14 @@ export function ReorderWorkspace({
         )}
       </section>
 
-      <div className="flex items-center justify-center gap-4">
-        <button
-          disabled={pageNo === 1}
-          onClick={() => setPageNo((p) => Math.max(1, p - 1))}
-          className="rounded bg-neutral-800 px-4 py-2 disabled:opacity-50"
-        >
-          Prev
-        </button>
-
-        <span className="text-sm text-neutral-300">
-          Page {pageNo} of {totalPages}
-        </span>
-
-        <button
-          disabled={pageNo === totalPages}
-          onClick={() => setPageNo((p) => Math.min(totalPages, p + 1))}
-          className="rounded bg-neutral-800 px-4 py-2 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      {orderedItems.length > 0 && (
+        <Paginator
+          total={orderedItems.length}
+          limit={pageSize}
+          currentPage={pageNo}
+          onPageChange={setPageNo}
+        />
+      )}
     </main>
   );
 }

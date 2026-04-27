@@ -6,9 +6,10 @@ import { usePDFHandler } from "../hooks/usePDFHandler.js";
 import { useNavigate } from "react-router-dom";
 import { getSessionId } from "../helpers/session.js";
 import { db } from "../dexie.js";
+import type { UploadedFile } from "../types/itemTypes.js";
 
 interface ImageToPdfArrangePageProps {
-  files: File[];
+  files: UploadedFile[];
 }
 
 export function ImageToPdfPreviewPage({ files }: ImageToPdfArrangePageProps) {
