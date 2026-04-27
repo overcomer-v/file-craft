@@ -67,12 +67,12 @@ function ServiceCard({
 }: ServiceCardProps) {
   return (
     <div
-      className={`flex flex-col gap-1 justify-center items-center border-2 cursor-pointer hover:bg-neutral-800 border-neutral-600 rounded-2xl w-[250px] h-[250px] px-8 ${className}`}
+      className={`flex flex-col gap-1 justify-center items-center border-2 cursor-pointer hover:bg-neutral-800 border-neutral-600 rounded-2xl md:w-[250px] h-[250px] px-8 ${className}`}
       {...rest}
     >
       <i className={`fa ${iconlabel} text-4xl text-red-600`}></i>
       <h3 className="font-semibold text-lg">{title}</h3>
-      <p className="text-center opacity-50">{messageText}</p>
+      <p className="text-center opacity-50 max-w-[70%]">{messageText}</p>
     </div>
   );
 }
