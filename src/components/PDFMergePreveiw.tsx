@@ -82,7 +82,7 @@ export function PdfMergePreviewPage({ files }: PdfMergeArrangePageProps) {
       const { url, downloadName } =
         (await mergePDFs(
           nextOrderedItems.map((file) => file.file),
-          name,
+          name,getSessionId()
         )) || {};
 
       navigate("/download", { state: { url, downloadName } });

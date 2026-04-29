@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import { clearSession } from "../helpers/session.js";
+import { useDBHandler } from "./useDBHandler.js";
 
 export type PdfSplitRange = {
   start: number;
@@ -51,8 +53,9 @@ function waitForNextTick() {
 
 export function usePdfSplit() {
   const [isFileSplitting, setIsFileSplitting] = useState(false);
+  const {clearDB} = useDBHandler();
 
-  const splitPdf = async (file: File | undefined, ranges: PdfSplitRange[]) => {
+  const splitPdf = async (sessionId:string,file: File | undefined, ranges: PdfSplitRange[]) => {
     try {
       setIsFileSplitting(true);
       if (!file || !ranges.length) return;
@@ -85,6 +88,8 @@ export function usePdfSplit() {
         downloadFile(outputBytes, createFileName(file.name, range, index));
         await waitForNextTick();
       }
+       await clearDB(sessionId);
+              clearSession();
     } catch (error) {
       console.error("Failed to split pdf:", error);
     } finally {

@@ -108,7 +108,7 @@ export function usePDFHandler() {
 
 
   const mergePDFs = useCallback(
-  async (pdfFiles: Blob[], fileName: string) => {
+  async (pdfFiles: Blob[], fileName: string,sessionId:string) => {
     setIsConverting(true);
     setProgress(null);
 
@@ -142,6 +142,9 @@ export function usePDFHandler() {
       }
 
       const mergedBytes = await mergedPdf.save();
+
+       await clearDB(sessionId);
+        clearSession();
 
       const blob = new Blob([mergedBytes as Uint8Array<ArrayBuffer>], {
         type: "application/pdf",

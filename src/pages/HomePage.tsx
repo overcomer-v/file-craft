@@ -7,7 +7,7 @@ export function HomePage() {
   return (
     <div className="flex flex-col h-full items-center w-full pb-12">
       <div className=" flex-col flex md:gap-3 gap-1 text-center w-full mt-24">
-        <p className="md:text-8xl text-5xl">
+        <p className="md:text-7xl text-5xl">
           Your All in One <span className="text-red-600 font-semibold">PDF </span>
           toolkit
         </p>
@@ -16,7 +16,7 @@ export function HomePage() {
         </p>
       </div>
 
-      <section className="mt-24 grid md:grid-cols-2 gap-12 ">
+      <section className="mt-24 grid md:grid-cols-2 lg:grid-cols-4 gap-12 ">
         <ServiceCard
         onClick={()=>{
           navigate(`/upload/${PDF_MODE.IMAGE_TO_PDF}`);
@@ -40,13 +40,13 @@ export function HomePage() {
           title="Merge PDF"
           messageText="Combine multiple PDFs into one and arrange pages easily"
         />
-         <ServiceCard
+         {/* <ServiceCard
          onClick={()=>{
           navigate(`/upload/${PDF_MODE.COMPRESS}`);
         }}
           title="Compress PDF"
           messageText="Reduce PDF file size while preserving quality"
-        />
+        /> */}
       </section>
     </div>
   );

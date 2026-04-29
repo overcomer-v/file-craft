@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { clearSession, getSessionId } from "../helpers/session.js";
 import { useDBHandler } from "../hooks/useDBHandler.js";
 import { db } from "../dexie.js";
+import { PDF_MODE } from "../types/operation-types.js";
 
 export function Header() {
   const navigate = useNavigate();
@@ -25,9 +26,9 @@ export function Header() {
           await clearSession();
           navigate("/");
 
-          console.log(await db.files.toArray())
+          console.log(await db.files.toArray());
         }}
-        className="fa fa-trash text-lg ml-auto bg-red-500 p-1 text-white rounded-lg px-3"
+        className="fa fa-refresh text-lg ml-auto bg-red-600 p-1 text-white rounded-lg px-3"
       ></button>
     </header>
   );
@@ -36,10 +37,9 @@ export function Header() {
 function NavBar() {
   return (
     <div className="flex gap-8 items-center font-semibold text-nowrap">
-      <span>Merge PDF</span>
-      <span>Split PDF</span>
-      <span>Image to PDF</span>
-      <span>Compress PDF</span>
+      <NavLink to={`/upload/${PDF_MODE.MERGE}`}>Merge PDF</NavLink>
+      <NavLink to={`/upload/${PDF_MODE.SPLIT}`}>Split PDF</NavLink>
+      <NavLink to={`/upload/${PDF_MODE.IMAGE_TO_PDF}`}>Image to PDF</NavLink>
     </div>
   );
 }

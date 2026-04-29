@@ -9,6 +9,7 @@ import { Paginator } from "./Pagenator.js";
 import { PdfThumbnail } from "./PDFThumbnail.js";
 import { RangeItem } from "./RangeItem.js";
 import { usePdfSplit } from "../hooks/usePDFSplitHandler.js";
+import { getSessionId } from "../helpers/session.js";
 
 GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -236,7 +237,7 @@ export function PdfSplitPreview({
   }
 
   function handleSplit() {
-    void splitPdf(file, parsedRanges.normalizedRanges);
+    void splitPdf(getSessionId() ,file, parsedRanges.normalizedRanges);
   }
 
   if (isLoading) {

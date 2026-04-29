@@ -27,18 +27,38 @@ export function SortablePreviewCard({ item, index }: SortablePreviewCardProps) {
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="relative overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 w-[45%] md:w-56"
-    >
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <BasePreviewCards
+        label={item.label}
+        index={index}
+        pageCount={item.meta?.pageCount}
+        previewUrl={item.previewUrl}
+        type={item.type}
+      />
+    </div>
+  );
+}
+
+export function BasePreviewCards({
+  label,
+  type,
+  pageCount,
+  index,
+  previewUrl,
+}: {
+  label: string;
+  type: "image" | "pdf";
+  pageCount?: number | undefined;
+  previewUrl?: string;
+  index?: number;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 w-[45%] md:w-56">
       <div className="aspect-[3/4] overflow-hidden bg-neutral-800">
-        {item.type === "image" ? (
+        {type === "image" && previewUrl ? (
           <img
-            src={item.previewUrl}
-            alt={item.label}
+            src={previewUrl}
+            alt={label}
             draggable={false}
             className="h-full w-full object-cover pointer-events-none"
           />
@@ -53,17 +73,15 @@ export function SortablePreviewCard({ item, index }: SortablePreviewCardProps) {
       </div>
 
       <div className="p-3">
-        <p className="truncate text-sm font-medium">{item.label}</p>
-        {item.type === "pdf" && (
-          <p className="text-xs text-neutral-400">
-            {item.meta?.pageCount ?? 0} pages
-          </p>
+        <p className="truncate text-sm font-medium">{label}</p>
+        {type === "pdf" && pageCount && (
+          <p className="text-xs text-neutral-400">{pageCount} pages</p>
         )}
       </div>
 
-      <div className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-sm font-semibold">
-        {index + 1}
-      </div>
+  { index && <div className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-sm font-semibold">
+    {index + 1}
+  </div>}
     </div>
   );
 }

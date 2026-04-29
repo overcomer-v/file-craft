@@ -7,6 +7,7 @@ import { getSessionId, hasSessionId } from "../helpers/session.js";
 import { PdfMergePreviewPage } from "../components/PDFMergePreveiw.js";
 import { PdfSplitPreview } from "../components/PDFsplitPreview.js";
 import type { UploadedFile } from "../types/itemTypes.js";
+import { PDFCompressPreviewPage } from "../components/PDFCompressPreview.js";
 
 export function PreviewPage() {
   const { fetchFiles } = useDBHandler();
@@ -49,5 +50,7 @@ export function PreviewPage() {
       return <PdfMergePreviewPage files={files} />;
     case PDF_MODE.SPLIT:
       return <PdfSplitPreview file={files[0]?.file}/>
+    case PDF_MODE.COMPRESS:
+      return <PDFCompressPreviewPage file={files[0]} />
   }
 }
