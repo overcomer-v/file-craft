@@ -5,11 +5,11 @@ import {
   type PDFDocumentLoadingTask,
   type PDFDocumentProxy,
 } from "pdfjs-dist";
-import { Paginator } from "./Pagenator.js";
-import { PdfThumbnail } from "./PDFThumbnail.js";
-import { RangeItem } from "./RangeItem.js";
-import { usePdfSplit } from "../hooks/usePDFSplitHandler.js";
-import { getSessionId } from "../helpers/session.js";
+import { Paginator } from "../Pagenator.js";
+import { PdfThumbnail } from "../PDFThumbnail.js";
+import { RangeItem } from "../RangeItem.js";
+import { usePdfSplit } from "../../hooks/usePDFSplitHandler.js";
+import { getSessionId } from "../../helpers/session.js";
 
 GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",

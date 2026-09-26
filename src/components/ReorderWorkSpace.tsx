@@ -17,21 +17,21 @@ import type { ReorderItem } from "../types/reorder.js";
 import { SortablePreviewCard } from "./SortableCard.js";
 import { Paginator } from "./Pagenator.js";
 
-interface ReorderWorkspaceProps {
-  items: ReorderItem[];
+interface ReorderWorkspaceProps<T extends ReorderItem> {
+  items: T[];
   pageSize?: number;
-  onOrderChange?: (items: ReorderItem[]) => void;
-  orderedItems: ReorderItem[];
-  setOrderedItems: (items: ReorderItem[]) => void;
+  onOrderChange?: (items: T[]) => void;
+  orderedItems: T[];
+  setOrderedItems: (items: T[]) => void;
 }
 
-export function ReorderWorkspace({
+export function ReorderWorkspace<T extends ReorderItem>({
   items,
-  pageSize = 15,
+  pageSize = 30,
   orderedItems,
   onOrderChange,
   setOrderedItems,
-}: ReorderWorkspaceProps) {
+}: ReorderWorkspaceProps<T>) {
   const [pageNo, setPageNo] = useState(1);
 
   useEffect(() => {

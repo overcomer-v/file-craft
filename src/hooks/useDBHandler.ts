@@ -7,6 +7,8 @@ export function useDBHandler() {
   const [isfileloading, setIsFileLoading] = useState<boolean>();
 
   const uploadFiles = async (fileList: File[], sessionId: string) => {
+    console.log(fileList);
+
     try {
       setIsFileUploading(true);
       if (!fileList?.length) return;
@@ -37,6 +39,8 @@ export function useDBHandler() {
         .equals(sessionId)
         .sortBy("order");
 
+      console.log("Output files", files, mode);
+
       const filteredFiles = files.filter((file) => {
         if (mode === PDF_MODE.IMAGE_TO_PDF) {
           return file.type.startsWith("image/");
@@ -45,13 +49,17 @@ export function useDBHandler() {
         if (
           mode === PDF_MODE.MERGE ||
           mode === PDF_MODE.SPLIT ||
-          mode === PDF_MODE.COMPRESS
+          mode === PDF_MODE.COMPRESS ||
+          mode === PDF_MODE.EDIT_PDF ||
+          mode === PDF_MODE.PDF_TO_IMAGES
         ) {
           return file.type === "application/pdf";
         }
 
         return false;
       });
+
+      console.log("filtered", filteredFiles);
 
       return { totalItems: filteredFiles.length, data: filteredFiles };
     } catch (error) {

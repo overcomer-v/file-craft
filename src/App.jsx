@@ -22,9 +22,9 @@ function App() {
 
 function RoutesWrapper({ children }) {
   return (
-    <div className="h-full bg-cover ">
+    <div className="h-full bg-default ">
       <Header></Header>
-      <div className="h-full md:px-12 px-4">{children}</div>
+      <div className="h-full py-12 md:px-12 px-4">{children}</div>
     </div>
   );
 }

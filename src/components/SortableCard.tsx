@@ -55,7 +55,7 @@ export function BasePreviewCards({
   return (
     <div className="relative overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 w-[45%] md:w-56">
       <div className="aspect-[3/4] overflow-hidden bg-neutral-800">
-        {type === "image" && previewUrl ? (
+        {previewUrl ? (
           <img
             src={previewUrl}
             alt={label}
@@ -79,9 +79,11 @@ export function BasePreviewCards({
         )}
       </div>
 
-  { index && <div className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-sm font-semibold">
-    {index + 1}
-  </div>}
+      {typeof index === "number" && (
+        <div className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-sm font-semibold">
+          {index + 1}
+        </div>
+      )}
     </div>
   );
 }

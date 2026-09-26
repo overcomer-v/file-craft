@@ -1,4 +1,4 @@
-import type { RangeInput } from "./PDFsplitPreview.js";
+import type { RangeInput } from "./previews/PDFsplitPreview.js";
 
 export function RangeItem({
   range,
