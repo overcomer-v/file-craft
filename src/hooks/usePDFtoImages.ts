@@ -2,11 +2,7 @@ import { useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { clearSession } from "../helpers/session.js";
 import { useDBHandler } from "./useDBHandler.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+import { canvasToBlob, renderPdfPageToCanvas } from "../helpers/pdfCanvas.js";
 
 export type ImageFormat = "png" | "jpeg";
 
@@ -22,19 +18,11 @@ function pageToBlob(
   format: ImageFormat,
   quality: number,
 ) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error("Could not encode page as image."));
-          return;
-        }
-        resolve(blob);
-      },
-      format === "png" ? "image/png" : "image/jpeg",
-      format === "jpeg" ? quality : undefined,
-    );
-  });
+  return canvasToBlob(
+    canvas,
+    format === "png" ? "image/png" : "image/jpeg",
+    format === "jpeg" ? quality : undefined,
+  );
 }
 
 function downloadBlob(blob: Blob, fileName: string) {
@@ -108,17 +96,7 @@ export function usePdfToImages() {
         }
 
         const page = await pdfDocument.getPage(pageIndex + 1);
-        const viewport = page.getViewport({ scale });
-
-        const canvas = document.createElement("canvas");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error("Could not create canvas context.");
-
-        await page.render({ canvas, canvasContext: context, viewport })
-          .promise;
-
+        const canvas = await renderPdfPageToCanvas(page, scale);
         const blob = await pageToBlob(canvas, format, quality);
 
         downloadBlob(blob, `${baseName}-page-${pageIndex + 1}.${extension}`);

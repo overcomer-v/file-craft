@@ -6,11 +6,10 @@ import * as pdfjsLib from "pdfjs-dist";
 import { usePdfPageManager } from "../../hooks/usePDFEdithandler.js";
 import { ReorderWorkspace } from "../ReorderWorkSpace.js";
 import type { ReorderItem } from "../../types/reorder.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+import {
+  renderPdfPageToCanvas,
+  canvasToBlob,
+} from "../../helpers/pdfCanvas.js";
 
 interface EditPdfPreviewPageProps {
   file: File | undefined;
@@ -27,6 +26,7 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
 
   const [items, setItems] = useState<PdfPageItem[]>([]);
   const [orderedItems, setOrderedItems] = useState<PdfPageItem[]>([]);
+  const [rotations, setRotations] = useState<Record<string, number>>({});
   const [fileName, setFileName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,31 +47,8 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
 
     for (let index = 0; index < pageCount; index++) {
       const page = await pdfDocument.getPage(index + 1);
-      const viewport = page.getViewport({ scale: 1.2 });
-
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-
-      if (!context) {
-        throw new Error("Could not create canvas context.");
-      }
-
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      await page.render({
-        canvas,
-        canvasContext: context,
-        viewport,
-      }).promise;
-
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob(resolve, "image/jpeg", 0.85);
-      });
-
-      if (!blob) {
-        throw new Error(`Could not create preview for page ${index + 1}.`);
-      }
+      const canvas = await renderPdfPageToCanvas(page, 1.2);
+      const blob = await canvasToBlob(canvas, "image/jpeg", 0.85);
 
       const previewUrl = URL.createObjectURL(blob);
 
@@ -115,6 +92,7 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
 
         setItems(next);
         setOrderedItems(next);
+        setRotations({});
       } catch (error) {
         console.error("Failed to load PDF:", error);
         alert(error instanceof Error ? error.message : "Failed to load PDF.");
@@ -135,6 +113,23 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
     };
   }, [file]);
 
+  function handleDeleteItem(itemId: string) {
+    // Only ever touches orderedItems, never items — changing items would
+    // re-fire ReorderWorkspace's items -> orderedItems reset effect and
+    // silently wipe out both the delete and any prior drag reorder.
+    setOrderedItems((current) => {
+      if (current.length <= 1) return current;
+      return current.filter((item) => item.id !== itemId);
+    });
+  }
+
+  function handleRotateItem(itemId: string) {
+    setRotations((current) => ({
+      ...current,
+      [itemId]: ((current[itemId] ?? 0) + 90) % 360,
+    }));
+  }
+
   async function handleConfirm(nextOrderedItems: PdfPageItem[]) {
     if (nextOrderedItems.length === 0) {
       alert("No pages left. At least one page must remain.");
@@ -143,7 +138,21 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
 
     const finalOrder = nextOrderedItems.map((item) => item.originalIndex);
 
-    const result = await applyPageOrder(sessionId, file, finalOrder, fileName);
+    const rotationsByOriginalIndex: Record<number, number> = {};
+    for (const item of nextOrderedItems) {
+      const rotation = rotations[item.id];
+      if (rotation) {
+        rotationsByOriginalIndex[item.originalIndex] = rotation;
+      }
+    }
+
+    const result = await applyPageOrder(
+      sessionId,
+      file,
+      finalOrder,
+      rotationsByOriginalIndex,
+      fileName,
+    );
 
     if (!result) return;
 
@@ -173,7 +182,7 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
             <div className="mt-3 h-1 w-10 rounded-full bg-red-500" />
 
             <p className="mt-3 text-sm text-neutral-500">
-              Drag pages to reorder them before saving your PDF.
+              Drag to reorder, rotate, or delete pages before saving your PDF.
             </p>
           </div>
 
@@ -312,9 +321,12 @@ export function EditPdfPreviewPage({ file }: EditPdfPreviewPageProps) {
             <div className="rounded-lg border border-neutral-800 bg-[#0b0b0b] p-2 md:p-3">
               <ReorderWorkspace
                 items={items}
-                onOrderChange={setItems}
                 orderedItems={orderedItems}
                 setOrderedItems={setOrderedItems}
+                rotations={rotations}
+                onRotateItem={handleRotateItem}
+                onDeleteItem={handleDeleteItem}
+                disabled={isProcessing}
               />
             </div>
           )}

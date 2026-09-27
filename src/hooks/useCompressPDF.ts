@@ -3,11 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { clearSession } from "../helpers/session.js";
 import { useDBHandler } from "./useDBHandler.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+import { canvasToBlob, renderPdfPageToCanvas } from "../helpers/pdfCanvas.js";
 
 export type CompressionLevel = "low" | "medium" | "high";
 
@@ -21,22 +17,6 @@ const LEVEL_SETTINGS: Record<
   medium: { scale: 1.5, quality: 0.7 },
   high: { scale: 1, quality: 0.5 },
 };
-
-function canvasToJpegBytes(canvas: HTMLCanvasElement, quality: number) {
-  return new Promise<ArrayBuffer>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error("Could not encode page as JPEG."));
-          return;
-        }
-        blob.arrayBuffer().then(resolve).catch(reject);
-      },
-      "image/jpeg",
-      quality,
-    );
-  });
-}
 
 export function usePdfCompress() {
   const [isCompressing, setIsCompressing] = useState(false);
@@ -83,19 +63,9 @@ export function usePdfCompress() {
           const page = await pdfDocument.getPage(index + 1);
 
           // Render at the compression-level scale for the actual pixels...
-          const renderViewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          canvas.width = renderViewport.width;
-          canvas.height = renderViewport.height;
-          const context = canvas.getContext("2d");
-          if (!context) throw new Error("Could not create canvas context.");
-          await page.render({
-            canvas,
-            canvasContext: context,
-            viewport: renderViewport,
-          }).promise;
-
-          const jpegBytes = await canvasToJpegBytes(canvas, quality);
+          const canvas = await renderPdfPageToCanvas(page, scale);
+          const blob = await canvasToBlob(canvas, "image/jpeg", quality);
+          const jpegBytes = await blob.arrayBuffer();
           const embeddedImage = await rasterizedPdf.embedJpg(jpegBytes);
 
           // ...but size the output page at the PDF's real point dimensions

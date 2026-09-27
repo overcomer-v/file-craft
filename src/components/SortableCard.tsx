@@ -1,4 +1,3 @@
-// components/SortablePreviewCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ReorderItem } from "../types/reorder.js";
@@ -6,9 +5,22 @@ import type { ReorderItem } from "../types/reorder.js";
 interface SortablePreviewCardProps {
   item: ReorderItem;
   index: number;
+  rotation?: number;
+  onRotate?: () => void;
+  onDelete?: () => void;
+  deleteDisabled?: boolean;
+  actionsDisabled?: boolean;
 }
 
-export function SortablePreviewCard({ item, index }: SortablePreviewCardProps) {
+export function SortablePreviewCard({
+  item,
+  index,
+  rotation,
+  onRotate,
+  onDelete,
+  deleteDisabled,
+  actionsDisabled,
+}: SortablePreviewCardProps) {
   const {
     attributes,
     listeners,
@@ -34,6 +46,11 @@ export function SortablePreviewCard({ item, index }: SortablePreviewCardProps) {
         pageCount={item.meta?.pageCount}
         previewUrl={item.previewUrl}
         type={item.type}
+        rotation={rotation ?? 0}
+        onRotate={onRotate}
+        onDelete={onDelete}
+        deleteDisabled={deleteDisabled}
+        actionsDisabled={actionsDisabled}
       />
     </div>
   );
@@ -45,13 +62,32 @@ export function BasePreviewCards({
   pageCount,
   index,
   previewUrl,
+  rotation = 0,
+  onRotate,
+  onDelete,
+  deleteDisabled,
+  actionsDisabled,
 }: {
   label: string;
   type: "image" | "pdf";
   pageCount?: number | undefined;
   previewUrl?: string;
   index?: number;
+  rotation?: number;
+  onRotate?: () => void;
+  onDelete?: () => void;
+  deleteDisabled?: boolean;
+  actionsDisabled?: boolean;
 }) {
+  // The whole card is a drag handle (SortablePreviewCard spreads
+  // {...listeners} on the outer div, no separate handle element), so any
+  // interactive control placed inside it needs to stop its pointer event
+  // before dnd-kit's sensors see it — otherwise a tap can be read as the
+  // start of a drag instead of a click.
+  function stopForDrag(e: React.SyntheticEvent) {
+    e.stopPropagation();
+  }
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-neutral-700 bg-neutral-900 w-[45%] md:w-56">
       <div className="aspect-[3/4] overflow-hidden bg-neutral-800">
@@ -60,7 +96,8 @@ export function BasePreviewCards({
             src={previewUrl}
             alt={label}
             draggable={false}
-            className="h-full w-full object-cover pointer-events-none"
+            className="h-full w-full object-cover pointer-events-none transition-transform duration-200"
+            style={{ transform: `rotate(${rotation}deg)` }}
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -82,6 +119,62 @@ export function BasePreviewCards({
       {typeof index === "number" && (
         <div className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-sm font-semibold">
           {index + 1}
+        </div>
+      )}
+
+      {(onRotate || onDelete) && (
+        <div className="absolute left-3 top-3 flex gap-1">
+          {onRotate && (
+            <button
+              type="button"
+              onPointerDown={stopForDrag}
+              onClick={(e) => {
+                stopForDrag(e);
+                onRotate();
+              }}
+              disabled={actionsDisabled}
+              title="Rotate page 90°"
+              className="
+                flex h-8 w-8 items-center justify-center
+                rounded-lg
+                bg-black/70
+                text-neutral-300
+                transition
+                hover:bg-neutral-800
+                hover:text-white
+                disabled:cursor-not-allowed
+                disabled:opacity-30
+              "
+            >
+              <i className="fa fa-rotate-right text-xs" />
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              type="button"
+              onPointerDown={stopForDrag}
+              onClick={(e) => {
+                stopForDrag(e);
+                onDelete();
+              }}
+              disabled={actionsDisabled || deleteDisabled}
+              title="Delete page"
+              className="
+                flex h-8 w-8 items-center justify-center
+                rounded-lg
+                bg-black/70
+                text-neutral-300
+                transition
+                hover:bg-red-600
+                hover:text-white
+                disabled:cursor-not-allowed
+                disabled:opacity-30
+              "
+            >
+              <i className="fa fa-trash text-xs" />
+            </button>
+          )}
         </div>
       )}
     </div>

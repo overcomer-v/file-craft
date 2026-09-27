@@ -103,6 +103,10 @@ function NavBar() {
       label: "Edit PDF",
       path: `/upload/${PDF_MODE.EDIT_PDF}`,
     },
+     {
+      label: "PDF to Images",
+      path: `/upload/${PDF_MODE.PDF_TO_IMAGES}`,
+    },
   ];
 
   return (

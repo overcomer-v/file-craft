@@ -1,20 +1,24 @@
 import { useState, useCallback } from "react";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, degrees } from "pdf-lib";
 import { clearSession } from "../helpers/session.js";
 import { useDBHandler } from "./useDBHandler.js";
 
 /**
- * Shared core: given a source file and a 0-based array of *original* page
- * indexes in the desired *output* order, builds a new PDF containing exactly
- * those pages in that order.
+ * Shared core: given a source file, a 0-based array of *original* page
+ * indexes in the desired *output* order, and an optional rotations map
+ * (original page index -> degrees to add), builds a new PDF containing
+ * exactly those pages, in that order, rotated as requested.
  *
  * - Deletion = pass an order that omits the indexes you want to drop.
  * - Rearrangement = pass every index, just in a different order.
- * - Both at once = pass a reordered array that also omits some indexes.
+ * - Rotation = set rotations[originalIndex] to 90/180/270.
+ * - Any combination of the above = pass a reordered/filtered order plus
+ *   whichever rotations apply to the pages that remain.
  */
 async function buildFromOrder(
   file: File,
   order: number[],
+  rotations: Record<number, number>,
   onProgress?: (current: number, total: number) => void,
 ) {
   const sourceBytes = await file.arrayBuffer();
@@ -39,7 +43,24 @@ async function buildFromOrder(
 
   for (let i = 0; i < copiedPages.length; i++) {
     onProgress?.(i + 1, copiedPages.length);
-    outputPdf.addPage(copiedPages[i]);
+
+    const page = copiedPages[i];
+    if (!page) continue;
+
+    const originalIndex = order[i];
+    const rotationDelta =
+      originalIndex !== undefined ? (rotations[originalIndex] ?? 0) : 0;
+
+    if (rotationDelta !== 0) {
+      // Additive: a page that was already rotated in the source PDF keeps
+      // that rotation, with the user's requested delta added on top —
+      // setRotation takes an absolute value, so read-then-add rather than
+      // overwrite.
+      const currentAngle = page.getRotation().angle;
+      page.setRotation(degrees((currentAngle + rotationDelta) % 360));
+    }
+
+    outputPdf.addPage(page);
   }
 
   return outputPdf.save({
@@ -62,6 +83,7 @@ export function usePdfPageManager() {
       sessionId: string,
       file: File | undefined,
       order: number[],
+      rotations: Record<number, number>,
       fileName: string,
       suffix: string,
     ) => {
@@ -78,8 +100,11 @@ export function usePdfPageManager() {
           return;
         }
 
-        const outputBytes = await buildFromOrder(file, order, (current, total) =>
-          setProgress({ current, total }),
+        const outputBytes = await buildFromOrder(
+          file,
+          order,
+          rotations,
+          (current, total) => setProgress({ current, total }),
         );
 
         await clearDB(sessionId);
@@ -133,7 +158,7 @@ export function usePdfPageManager() {
         (i) => !toDelete.has(i),
       );
 
-      return runAndDownload(sessionId, file, remainingOrder, fileName, "edited");
+      return runAndDownload(sessionId, file, remainingOrder, {}, fileName, "edited");
     },
     [runAndDownload],
   );
@@ -149,24 +174,26 @@ export function usePdfPageManager() {
       newOrder: number[],
       fileName = "",
     ) => {
-      return runAndDownload(sessionId, file, newOrder, fileName, "reordered");
+      return runAndDownload(sessionId, file, newOrder, {}, fileName, "reordered");
     },
     [runAndDownload],
   );
 
   /**
-   * Do both in one pass: pass the final order you want, simply omitting any
-   * indexes to delete. This is what a drag-and-drop page grid with a
-   * delete button on each thumbnail should call on save.
+   * Do it all in one pass: final page order, optional per-original-index
+   * rotation deltas (degrees, added to each page's existing rotation), and
+   * an output filename. This is what the edit page's page grid should call
+   * on save.
    */
   const applyPageOrder = useCallback(
     async (
       sessionId: string,
       file: File | undefined,
       finalOrder: number[],
+      rotations: Record<number, number> = {},
       fileName = "",
     ) => {
-      return runAndDownload(sessionId, file, finalOrder, fileName, "edited");
+      return runAndDownload(sessionId, file, finalOrder, rotations, fileName, "edited");
     },
     [runAndDownload],
   );

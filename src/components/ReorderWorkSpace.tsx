@@ -23,6 +23,14 @@ interface ReorderWorkspaceProps<T extends ReorderItem> {
   onOrderChange?: (items: T[]) => void;
   orderedItems: T[];
   setOrderedItems: (items: T[]) => void;
+  // Edit-only, all optional: a caller that doesn't pass these (e.g. a
+  // future image-to-pdf usage of this same workspace) gets no rotate/delete
+  // UI at all — see BasePreviewCards, which only renders those buttons when
+  // the corresponding handler is actually provided.
+  rotations?: Record<string, number>;
+  onRotateItem?: (id: string) => void;
+  onDeleteItem?: (id: string) => void;
+  disabled?: boolean;
 }
 
 export function ReorderWorkspace<T extends ReorderItem>({
@@ -31,6 +39,10 @@ export function ReorderWorkspace<T extends ReorderItem>({
   orderedItems,
   onOrderChange,
   setOrderedItems,
+  rotations,
+  onRotateItem,
+  onDeleteItem,
+  disabled,
 }: ReorderWorkspaceProps<T>) {
   const [pageNo, setPageNo] = useState(1);
 
@@ -100,6 +112,15 @@ export function ReorderWorkspace<T extends ReorderItem>({
                   key={item.id}
                   item={item}
                   index={(pageNo - 1) * pageSize + index}
+                  rotation={rotations?.[item.id] ?? 0}
+                  onRotate={
+                    onRotateItem ? () => onRotateItem(item.id) : undefined
+                  }
+                  onDelete={
+                    onDeleteItem ? () => onDeleteItem(item.id) : undefined
+                  }
+                  deleteDisabled={orderedItems.length <= 1}
+                  actionsDisabled={disabled}
                 />
               ))}
             </SortableContext>
